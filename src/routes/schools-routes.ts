@@ -1,5 +1,6 @@
 import express, {Request, Response} from 'express';
 import {getDb} from '../database/connection';
+import {School} from '../@types/main';
 
 export const foreign_languages = [
     'Angielski',
@@ -44,55 +45,78 @@ export const profiles = ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
 
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
-    // woj, miasto, profil, rozszerzone przedmioty, jezyki
-    const {name, city, region, languages} = req.query;
+    try {
+        // woj, miasto, profil, rozszerzone przedmioty, jezyki
+        const {name, city, region, languages, classes} = req.query;
 
-    const db = await getDb();
-    let query = 'SELECT * FROM `schools`';
-    const terms = [];
+        const db = await getDb();
+        let query = 'SELECT * FROM `schools`';
+        const terms = [];
 
-    if (name) {
-        terms.push('name LIKE :name');
-    }
-    if (city) {
-        terms.push('city LIKE :city');
-    }
-    if (region) {
-        terms.push('region LIKE :region');
-    }
-
-    const lanFilters = {};
-    const lanTerms = [];
-    let lanTermsString = '';
-    if (languages) {
-        const parsed = JSON.parse((languages as string) || '');
-        let counter = 0;
-        for (const el of parsed) {
-            const key = `lan${counter}`;
-            lanTerms.push(`foreign_languages like :${key}`);
-            lanFilters[`lan${counter}`] = `%${el}%`;
-            counter++;
+        if (name) {
+            terms.push('name LIKE :name');
         }
-        lanTermsString = `(${lanTerms.join(' OR ')})`;
-    }
-
-    if (terms.length > 0 || lanTermsString) {
-        query += ' WHERE ' + terms.join(' AND ');
-        if (lanTermsString && terms.length) {
-            query += ' AND ';
+        if (city) {
+            terms.push('city LIKE :city');
         }
+        if (region) {
+            terms.push('region LIKE :region');
+        }
+
+        const lanFilters = {};
+        const lanTerms = [];
+        let lanTermsString = '';
+        if (languages) {
+            const parsed = JSON.parse((languages as string) || '');
+            let counter = 0;
+            for (const el of parsed) {
+                const key = `lan${counter}`;
+                lanTerms.push(`foreign_languages like :${key}`);
+                lanFilters[`lan${counter}`] = `%${el}%`;
+                counter++;
+            }
+            lanTermsString = `(${lanTerms.join(' OR ')})`;
+        }
+
+        if (terms.length > 0 || lanTermsString) {
+            query += ' WHERE ' + terms.join(' AND ');
+            if (lanTermsString && terms.length) {
+                query += ' AND ';
+            }
+        }
+
+        const fullQuery = query + lanTermsString;
+
+        const data = await db.execute(fullQuery, {
+            name: name ? `%${name}%` : null,
+            region: region ? `%${region}%` : null,
+            city: city ? `%${city}%` : null,
+            ...lanFilters,
+        });
+        const schools = data[0] as School[];
+        console.log(classes);
+        if (classes) {
+            const query_classes = JSON.parse((classes as string) || '');
+            const filtered = schools.filter((school) => {
+                // parsed is ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo']
+                // school.classes is ['Biol-Chem', 'Mat-Inf']
+                const db_classes = JSON.parse(school.classes);
+
+                for (const el of query_classes) {
+                    if (!db_classes.includes(el)) {
+                        console.log(query_classes, el, 'tu');
+                        return false;
+                    }
+                }
+                return true;
+            });
+            return res.json(filtered);
+        }
+
+        res.json(schools);
+    } catch (error) {
+        res.status(500).json({message: 'Internal server error'});
     }
-
-    const fullQuery = query + lanTermsString;
-
-    const data = await db.execute(fullQuery, {
-        name: name ? `%${name}%` : null,
-        region: region ? `%${region}%` : null,
-        city: city ? `%${city}%` : null,
-        ...lanFilters,
-    });
-
-    res.json(data[0]);
 });
 
 schoolsRouter.get('/options', async (req: Request, res: Response) => {
