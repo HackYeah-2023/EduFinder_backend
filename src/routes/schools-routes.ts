@@ -80,7 +80,7 @@ schoolsRouter.get('/options', async (req: Request, res: Response) => {
         'SELECT s.city FROM hackyeah2023.SCHOOLS s group by s.city',
     );
     result.cities = cities[0].map((city) => city.city);
-    result.languages = [
+    result.foreign_languages = [
         'Angielski',
         'Niemiecki',
         'Hiszpański',
@@ -95,8 +95,8 @@ schoolsRouter.get('/options', async (req: Request, res: Response) => {
         'Turecki',
     ];
     result.extended_subjects = ['Biologia', 'Chemia', 'Matematyka'];
-    result.subjects_included = ['Biologia', 'Chemia', 'Matematyka'];
     result.profession = ['Lekarz', 'Programista', 'Prawnik'];
+    result.profiles = ['Biol-Chem', 'Mat-Fiz'];
 
     res.json(result);
 });
