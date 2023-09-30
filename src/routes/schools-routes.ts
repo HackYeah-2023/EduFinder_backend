@@ -16,8 +16,10 @@ export const foreign_languages = [
     'Turecki',
 ];
 export const extended_subjects = [
+    // Biol-Chem
     'Biologia',
     'Chemia',
+    // Mat fiz,inf
     'Matematyka',
     'Informatyka',
     'WOS',
@@ -32,7 +34,7 @@ export const profession = [
     'Automatyk',
     'Kierownik',
 ];
-export const profiles = ['Biol-Chem', 'Mat-Fiz', 'Mat-Inf', 'Ekonomiczny', 'Prawniczy'];
+export const profiles = ['Biol-Chem', 'Mat-Fiz', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
 
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
