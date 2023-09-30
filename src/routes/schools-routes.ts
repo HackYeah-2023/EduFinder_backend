@@ -4,7 +4,7 @@ import {getDb} from '../database/connection';
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
 	const {name, city, county, type, region} = req.query;
-	console.log(`DATA FROM USER: ${name} ${county} ${type} ${city}`);
+	console.log('REQ QUERY', req.query);
 	const db = await getDb();
 	let query = 'SELECT * FROM `schools`';
 	const terms = [];
@@ -15,24 +15,17 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
 	if (city) {
 		terms.push('city LIKE :city');
 	}
-	if (county) {
-		terms.push('county LIKE :county');
-	}
-	if (type) {
-		terms.push('type LIKE :type');
-	}
 	if (region) {
 		terms.push('region LIKE :region');
 	}
+	if()
 	if (terms.length > 0) {
 		query += ' WHERE ' + terms.join(' AND ');
 	}
 
 	const data = await db.execute(query, {
 		name: name ? `%${name}%` : null,
-		city: city ? `%${city}%` : null,
 		county: county ? `%${county}%` : null,
-		type: type ? `%${type}%` : null,
 		region: region ? `%${region}%` : null,
 	});
 
@@ -41,50 +34,50 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 schoolsRouter.get('/options', async (req: Request, res: Response) => {
-    const db = await getDb();
-    const result: Record<string, string[]> = {
-        regions: [
-            'Dolnośląskie',
-            'Kujawsko-Pomorskie',
-            'Lubelskie',
-            'Lubuskie',
-            'Łódzkie',
-            'Małopolskie',
-            'Mazowieckie',
-            'Opolskie',
-            'Podkarpackie',
-            'Podlaskie',
-            'Pomorskie',
-            'Śląskie',
-            'Świętokrzyskie',
-            'Warmińsko-Mazurskie',
-            'Wielkopolskie',
-            'Zachodniopomorskie',
-        ],
-    };
-    const cities: any[][] = await db.execute(
-        'SELECT s.city FROM hackyeah2023.SCHOOLS s group by s.city',
-    );
-    result.cities = cities[0].map((city) => city.city);
-    result.languages = [
-        'Angielski',
-        'Niemiecki',
-        'Hiszpański',
-        'Francuski',
-        'Rosyjski',
-        'Włoski',
-        'Chiński',
-        'Japoński',
-        'Portugalski',
-        'Arabski',
-        'Koreański',
-        'Turecki',
-    ];
-    result.extended_subjects = ['Biologia', 'Chemia', 'Matematyka'];
-    result.subjects_included = ['Biologia', 'Chemia', 'Matematyka'];
-    result.profession = ['Lekarz', 'Programista', 'Prawnik'];
+	const db = await getDb();
+	const result: Record<string, string[]> = {
+		regions: [
+			'Dolnośląskie',
+			'Kujawsko-Pomorskie',
+			'Lubelskie',
+			'Lubuskie',
+			'Łódzkie',
+			'Małopolskie',
+			'Mazowieckie',
+			'Opolskie',
+			'Podkarpackie',
+			'Podlaskie',
+			'Pomorskie',
+			'Śląskie',
+			'Świętokrzyskie',
+			'Warmińsko-Mazurskie',
+			'Wielkopolskie',
+			'Zachodniopomorskie',
+		],
+	};
+	const cities: any[][] = await db.execute(
+		'SELECT s.city FROM hackyeah2023.SCHOOLS s group by s.city'
+	);
+	result.cities = cities[0].map(city => city.city);
+	result.languages = [
+		'Angielski',
+		'Niemiecki',
+		'Hiszpański',
+		'Francuski',
+		'Rosyjski',
+		'Włoski',
+		'Chiński',
+		'Japoński',
+		'Portugalski',
+		'Arabski',
+		'Koreański',
+		'Turecki',
+	];
+	result.extended_subjects = ['Biologia', 'Chemia', 'Matematyka'];
+	result.subjects_included = ['Biologia', 'Chemia', 'Matematyka'];
+	result.profession = ['Lekarz', 'Programista', 'Prawnik'];
 
-    res.json(result);
+	res.json(result);
 });
 
 export default schoolsRouter;
