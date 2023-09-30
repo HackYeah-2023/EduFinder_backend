@@ -1,9 +1,14 @@
 import {User} from 'src/@types/main';
 import pool from '../connection';
-import bcrypt from 'bcrypt';
 import {ValidationError} from '../../common/error';
-import { hash } from 'src/utils/hash';
-
+// import {hash} from 'src/utils/hash'; jakimś cudem ts-node nie widzi tego modułu
+import bcrypt from 'bcrypt';
+export const hash = async (password: string): Promise<string> => {
+	const saltRounds = 10;
+	const salt = await bcrypt.genSalt(saltRounds);
+	const hashedEmail = await bcrypt.hash(password, salt);
+	return hashedEmail;
+};
 
 export class UserRepository {
 	//
