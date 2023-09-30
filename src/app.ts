@@ -7,6 +7,7 @@ import usersRouter from './routes/users.routes';
 import {config} from './config';
 import schoolsRouter from './routes/schools-routes';
 import classesRouter from './routes/classes-routes';
+import {handleError} from './common/error';
 
 const app = express();
 
@@ -16,9 +17,9 @@ require('dotenv').config();
 app.use(cors());
 
 app.use(express.json());
-
+// app.use(handleError); ! tu są jakieś problemy
 app.get<Request, MessageResponse>('/', (_req, res) => {
-    res.json({message: config.WHOAMI});
+	res.json({message: config.WHOAMI});
 });
 app.use('/app', appRouter);
 app.use('/users', usersRouter);

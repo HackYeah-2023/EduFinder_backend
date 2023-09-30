@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import {Request, Response} from 'express';
 
 class ValidationError extends Error {}
 
@@ -17,4 +17,4 @@ const handleError = (
 	});
 };
 
-export { handleError, ValidationError };
+export {handleError, ValidationError};
