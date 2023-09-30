@@ -1,4 +1,3 @@
-import {extended_subjects} from './schools-routes';
 import express, {Request, Response} from 'express';
 import {getDb} from '../database/connection';
 import {School} from '../@types/main';
