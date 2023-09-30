@@ -1,3 +1,4 @@
+import {extended_subjects} from './schools-routes';
 import express, {Request, Response} from 'express';
 import {getDb} from '../database/connection';
 import {School} from '../@types/main';
@@ -47,7 +48,7 @@ const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
     try {
         // woj, miasto, profil, rozszerzone przedmioty, jezyki
-        const {name, city, region, languages, classes} = req.query;
+        const {name, city, region, languages, classes, extended_subjects} = req.query;
 
         const db = await getDb();
         let query = 'SELECT * FROM `schools`';
@@ -93,8 +94,7 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
             city: city ? `%${city}%` : null,
             ...lanFilters,
         });
-        const schools = data[0] as School[];
-        console.log(classes);
+        let schools = data[0] as School[];
         if (classes) {
             const query_classes = JSON.parse((classes as string) || '');
             const filtered = schools.filter((school) => {
@@ -110,7 +110,23 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
                 }
                 return true;
             });
-            return res.json(filtered);
+            schools = filtered;
+        }
+        if (extended_subjects) {
+            const query_extended_subjects = JSON.parse((extended_subjects as string) || '');
+            const filtered = schools.filter((school) => {
+                // parsed is ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo']
+                // school.classes is ['Biol-Chem', 'Mat-Inf']
+                const db_extended_subjects = JSON.parse(school.extended_subjects);
+
+                for (const el of query_extended_subjects) {
+                    if (!db_extended_subjects.includes(el)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            schools = filtered;
         }
 
         res.json(schools);

@@ -27,6 +27,7 @@ export interface School {
     phone: string;
     foreign_languages: string;
     classes: string;
+    extended_subjects: string;
 }
 
 export interface User {
