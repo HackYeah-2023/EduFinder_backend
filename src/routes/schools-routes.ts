@@ -3,7 +3,10 @@ import {getDb} from '../database/connection';
 
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
-	const {name, city, county, type, region} = req.query;
+	// 	select s.name,s.foreign_languages from hackyeah2023.schools s
+	// where s.foreign_languages like "%Niemiecki%"
+	// or s.foreign_languages like "%Polski%"
+	const {name, city, county, type, region, languages} = req.query;
 	console.log('REQ QUERY', req.query);
 	const db = await getDb();
 	let query = 'SELECT * FROM `schools`';
@@ -18,11 +21,12 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
 	if (region) {
 		terms.push('region LIKE :region');
 	}
-	if()
 	if (terms.length > 0) {
 		query += ' WHERE ' + terms.join(' AND ');
 	}
-
+	//and foreign language like cos_tam or foreign language like cos_innego
+	const languageTerms = String(languages).split(','); //[Polski, Niemiecki]
+	
 	const data = await db.execute(query, {
 		name: name ? `%${name}%` : null,
 		county: county ? `%${county}%` : null,
