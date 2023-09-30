@@ -1,6 +1,39 @@
 import express, {Request, Response} from 'express';
 import {getDb} from '../database/connection';
 
+export const foreign_languages = [
+    'Angielski',
+    'Niemiecki',
+    'Hiszpański',
+    'Francuski',
+    'Rosyjski',
+    'Włoski',
+    'Chiński',
+    'Japoński',
+    'Portugalski',
+    'Arabski',
+    'Koreański',
+    'Turecki',
+];
+export const extended_subjects = [
+    'Biologia',
+    'Chemia',
+    'Matematyka',
+    'Informatyka',
+    'WOS',
+    'Polski',
+    'Historia',
+];
+export const profession = [
+    'Lekarz',
+    'Programista',
+    'Prawnik',
+    'Nauczyciel',
+    'Automatyk',
+    'Kierownik',
+];
+export const profiles = ['Biol-Chem', 'Mat-Fiz', 'Mat-Inf', 'Ekonomiczny', 'Prawniczy'];
+
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
     // woj, miasto, profil, rozszerzone przedmioty, jezyki
@@ -80,23 +113,10 @@ schoolsRouter.get('/options', async (req: Request, res: Response) => {
         'SELECT s.city FROM hackyeah2023.SCHOOLS s group by s.city',
     );
     result.cities = cities[0].map((city) => city.city);
-    result.foreign_languages = [
-        'Angielski',
-        'Niemiecki',
-        'Hiszpański',
-        'Francuski',
-        'Rosyjski',
-        'Włoski',
-        'Chiński',
-        'Japoński',
-        'Portugalski',
-        'Arabski',
-        'Koreański',
-        'Turecki',
-    ];
-    result.extended_subjects = ['Biologia', 'Chemia', 'Matematyka'];
-    result.profession = ['Lekarz', 'Programista', 'Prawnik'];
-    result.profiles = ['Biol-Chem', 'Mat-Fiz'];
+    result.foreign_languages = foreign_languages;
+    result.extended_subjects = extended_subjects;
+    result.profession = profession;
+    result.profiles = profiles;
 
     res.json(result);
 });
