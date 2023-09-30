@@ -22,19 +22,25 @@ export const extended_subjects = [
     // Mat fiz,inf
     'Matematyka',
     'Informatyka',
+    // Prawo, ekonomiczny
     'WOS',
     'Polski',
     'Historia',
 ];
 export const profession = [
+    // Biol-Chem
     'Lekarz',
+    // Mat fiz,inf
     'Programista',
+    'Automatyk',
+    // Prawo
     'Prawnik',
     'Nauczyciel',
-    'Automatyk',
+    // Ekonomiczny
     'Kierownik',
+    'Menadżer',
 ];
-export const profiles = ['Biol-Chem', 'Mat-Fiz', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
+export const profiles = ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
 
 const schoolsRouter = express.Router();
 schoolsRouter.get('/', async (req: Request, res: Response) => {
