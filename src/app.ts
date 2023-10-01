@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {Request} from 'express';
 import cors from 'cors';
 import appRouter from './routes/app.routes';
 import {errorHandlerMiddleware, notFoundMiddleware} from './common/middlewares';
@@ -7,7 +7,7 @@ import usersRouter from './routes/users.routes';
 import {config} from './config';
 import schoolsRouter from './routes/schools-routes';
 import classesRouter from './routes/classes-routes';
-import {handleError} from './common/error';
+// import {handleError} from './common/error';
 
 const app = express();
 

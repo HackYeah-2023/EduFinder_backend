@@ -1,9 +1,10 @@
 import express, {Request, Response} from 'express';
-import pool, {getDb} from '../database/connection';
 import {School} from '../@types/main';
-import {ValidationError} from '../common/error';
+import pool from '../database/connection';
 
-export const foreign_languages = [
+const schoolsRouter = express.Router();
+
+const foreignLanguages = [
 	'Angielski',
 	'Niemiecki',
 	'Hiszpański',
@@ -17,120 +18,76 @@ export const foreign_languages = [
 	'Koreański',
 	'Turecki',
 ];
-export const extended_subjects = [
-	// Biol-Chem
+
+const extendedSubjects = [
 	'Biologia',
 	'Chemia',
-	// Mat fiz,inf
 	'Matematyka',
 	'Informatyka',
-	// Prawo, ekonomiczny
 	'WOS',
 	'Polski',
 	'Historia',
 ];
-export const profession = [
-	// Biol-Chem
+
+const profession = [
 	'Lekarz',
-	// Mat fiz,inf
 	'Programista',
 	'Automatyk',
-	// Prawo
 	'Prawnik',
 	'Nauczyciel',
-	// Ekonomiczny
 	'Kierownik',
 	'Menadżer',
 ];
-export const profiles = ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
 
-const schoolsRouter = express.Router();
+const profiles = ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo'];
+
 schoolsRouter.get('/', async (req: Request, res: Response) => {
 	try {
-		// woj, miasto, profil, rozszerzone przedmioty, jezyki
-		const {name, city, region, languages, classes, extended_subjects} =
+		const {name, city, region, languages, classes, extendedSubjects} =
 			req.query;
 
-		const db = await getDb();
 		let query = 'SELECT * FROM `schools`';
-		const terms = [];
+		const terms: string[] = [];
 
-		if (name) {
-			terms.push('name LIKE :name');
-		}
-		if (city) {
-			terms.push('city LIKE :city');
-		}
-		if (region) {
-			terms.push('region LIKE :region');
-		}
+		if (name) terms.push('name LIKE :name');
+		if (city) terms.push('city LIKE :city');
+		if (region) terms.push('region LIKE :region');
 
-		const lanFilters = {};
-		const lanTerms = [];
-		let lanTermsString = '';
-		if (languages) {
-			const parsed = JSON.parse((languages as string) || '');
-			let counter = 0;
-			for (const el of parsed) {
-				const key = `lan${counter}`;
-				lanTerms.push(`foreign_languages like :${key}`);
-				lanFilters[`lan${counter}`] = `%${el}%`;
-				counter++;
+		const filters: Record<string, string[]> = {
+			name: name ? [`%${name}%`] : [],
+			region: region ? [`%${region}%`] : [],
+			city: city ? [`%${city}%`] : [],
+		};
+
+		['languages', 'classes', 'extendedSubjects'].forEach((param, index) => {
+			if (req.query[param]) {
+				const values = JSON.parse(req.query[param] as string) || [];
+				const paramTerms = values.map((value, i) => {
+					const key = `${param.charAt(0).toLowerCase()}${index}${i}`;
+					filters[key] = [`%${value}%`];
+					return `${param} LIKE :${key}`;
+				});
+				if (paramTerms.length > 0) terms.push(`(${paramTerms.join(' OR ')})`);
 			}
-			lanTermsString = `(${lanTerms.join(' OR ')})`;
-		}
-
-		if (terms.length > 0 || lanTermsString) {
-			query += ' WHERE ' + terms.join(' AND ');
-			if (lanTermsString && terms.length) {
-				query += ' AND ';
-			}
-		}
-
-		const fullQuery = query + lanTermsString;
-
-		const data = await db.execute(fullQuery, {
-			name: name ? `%${name}%` : null,
-			region: region ? `%${region}%` : null,
-			city: city ? `%${city}%` : null,
-			...lanFilters,
 		});
+
+		if (terms.length > 0) query += ` WHERE ${terms.join(' AND ')}`;
+
+		const fullQuery = query;
+
+		const data = await pool.execute(fullQuery, filters);
+
 		let schools = data[0] as School[];
-		if (classes) {
-			const query_classes = JSON.parse((classes as string) || '');
-			const filtered = schools.filter(school => {
-				// parsed is ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo']
-				// school.classes is ['Biol-Chem', 'Mat-Inf']
-				const db_classes = JSON.parse(school.classes);
 
-				for (const el of query_classes) {
-					if (!db_classes.includes(el)) {
-						console.log(query_classes, el, 'tu');
-						return false;
-					}
-				}
-				return true;
-			});
-			schools = filtered;
-		}
-		if (extended_subjects) {
-			const query_extended_subjects = JSON.parse(
-				(extended_subjects as string) || ''
-			);
-			const filtered = schools.filter(school => {
-				// parsed is ['Biol-Chem', 'Mat-Inf', 'Ekonomiczny', 'Prawo']
-				// school.classes is ['Biol-Chem', 'Mat-Inf']
-				const db_extended_subjects = JSON.parse(school.extended_subjects);
-
-				for (const el of query_extended_subjects) {
-					if (!db_extended_subjects.includes(el)) {
-						return false;
-					}
-				}
-				return true;
-			});
-			schools = filtered;
-		}
+		['classes', 'extendedSubjects'].forEach(param => {
+			if (req.query[param]) {
+				const queryParam = JSON.parse(req.query[param] as string) || [];
+				schools = schools.filter(school => {
+					const dbParam = JSON.parse(school[param]);
+					return queryParam.every(el => dbParam.includes(el));
+				});
+			}
+		});
 
 		res.json(schools);
 	} catch (error) {
@@ -139,7 +96,7 @@ schoolsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 schoolsRouter.get('/options', async (req: Request, res: Response) => {
-	const db = await getDb();
+	// const db = await getDb();
 	const result: Record<string, string[]> = {
 		regions: [
 			'Dolnośląskie',
@@ -159,49 +116,59 @@ schoolsRouter.get('/options', async (req: Request, res: Response) => {
 			'Wielkopolskie',
 			'Zachodniopomorskie',
 		],
+		cities: [],
+		foreign_languages: foreignLanguages,
+		extendedSubjects: extendedSubjects,
+		profession: profession,
+		profiles: profiles,
 	};
-	const cities: any[][] = await db.execute(
-		'SELECT s.city FROM hackyeah2023.SCHOOLS s group by s.city'
+
+	const citiesQuery: any[][] = await pool.execute(
+		'SELECT s.city FROM hackyeah2023.SCHOOLS s GROUP BY s.city'
 	);
-	result.cities = cities[0].map(city => city.city);
-	result.foreign_languages = foreign_languages;
-	result.extended_subjects = extended_subjects;
-	result.profession = profession;
-	result.profiles = profiles;
+	result.cities = citiesQuery[0].map(city => city.city);
+
+	['foreignLanguages', 'extendedSubjects', 'profession', 'profiles'].forEach(
+		param => {
+			result[param] = eval(param);
+		}
+	);
 
 	res.json(result);
 });
+
 type Like = -1 | 1;
+
 schoolsRouter.patch('/', async (req: Request, res: Response) => {
-	let likes: Like = Number(req.query.likes) as unknown as Like;
+	const likes: Like = Number(req.query.likes) as Like;
 
 	try {
 		if (Number.isNaN(likes))
 			return res.status(400).json({message: 'Likes must be a number'});
 		if (likes !== 1 && likes !== -1)
 			return res.status(400).json({message: 'Likes must be 1 or -1'});
+
 		const {id} = req.query;
 		const currLikes = (
 			await pool.execute('SELECT `likes` FROM `schools` WHERE `id` = :id', {id})
 		)[0][0].likes;
-
 		const sum = currLikes + likes;
-		console.log('SUM: ', sum, ' type: ', typeof sum);
 
 		await pool.execute('UPDATE `schools` SET `likes` = :sum WHERE id = :id', {
 			id,
 			sum,
 		});
+
 		return res
 			.status(200)
 			.json({message: 'Likes has been updated', likesCount: sum});
-	} catch (err) {
-		console.log(err);
+	} catch (error) {
+		console.error(error);
 		return res
-			.status(err.code === 'ER_WARN_DATA_OUT_OF_RANGE' ? 400 : 500)
+			.status(error.code === 'ER_WARN_DATA_OUT_OF_RANGE' ? 400 : 500)
 			.json({
 				message:
-					err.code === 'ER_WARN_DATA_OUT_OF_RANGE'
+					error.code === 'ER_WARN_DATA_OUT_OF_RANGE'
 						? 'Likes cannot be lower than 0'
 						: 'Sorry, try again later',
 			});

@@ -1,7 +1,16 @@
-import bcrypt from 'bcrypt';
-export const hash = async (password: string): Promise<string> => {
-	const saltRounds = 10;
-	const salt = await bcrypt.genSalt(saltRounds);
-	const hashedEmail = await bcrypt.hash(password, salt);
-	return hashedEmail;
-};
+import {pbkdf2} from 'crypto';
+import {promisify} from 'util';
+
+const pbkdf2Async = promisify(pbkdf2);
+
+export const hash = async (inputString: string): Promise<string> =>
+	'SLDKFHDSL:KFHDSOIHFDSOIC<VJLKHDFS:JLHDSF' +
+	(
+		await pbkdf2Async(
+			inputString,
+			Buffer.from('SLDKFHDSL:KFHDSOIHFDSOIC<VJLKHDFS:JLHDSF', 'hex'),
+			1e4,
+			64,
+			'sha512'
+		)
+	).toString('hex');
