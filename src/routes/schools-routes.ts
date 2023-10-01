@@ -208,14 +208,6 @@ schoolsRouter.patch('/', async (req: Request, res: Response) => {
 	} finally {
 		res.end();
 	}
-
-	//udało się zupdateować liki
-	// const [currSchool] = await pool.execute(
-	// 	'SELECT * FROM `schools` WHERE `id` = :id'
-	// );
-	// console.log('CURR SCHOOL: ', currSchool);
-
-	res.end();
 });
 
 export default schoolsRouter;
