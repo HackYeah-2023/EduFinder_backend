@@ -150,7 +150,9 @@ schoolsRouter.patch('/', async (req: Request, res: Response) => {
 
 		const {id} = req.query;
 		const currLikes = (
-			await pool.execute('SELECT `likes` FROM `schools` WHERE `id` = :id', {id})
+			await pool.execute('SELECT `likes` FROM `schools` WHERE `id` = :id', {
+				id,
+			})
 		)[0][0].likes;
 		const sum = currLikes + likes;
 
