@@ -17,7 +17,7 @@ require('dotenv').config();
 app.use(cors());
 
 app.use(express.json());
-// app.use(handleError); ! tu są jakieś problemy
+// app.use(handleError);
 app.get<Request, MessageResponse>('/', (_req, res) => {
 	res.json({message: config.WHOAMI});
 });
